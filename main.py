@@ -8,3 +8,7 @@ def root():
 @app.get("/post")
 def get_posts():
     return {"data": "List of posts"}
+
+@app.post("/createposts")
+def create_post():
+    return {"message": "Post created successfully"}
