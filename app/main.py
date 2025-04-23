@@ -3,6 +3,15 @@ from fastapi import Body
 from pydantic import BaseModel
 from typing import Optional
 from random import randrange
+import psycopg2
+import os
+from dotenv import load_dotenv
+from psycopg2.extras import RealDictCursor
+import time
+
+# Load environment variables from .env file
+load_dotenv()
+password = os.getenv('DB_PASSWORD')
 
 app = FastAPI()
 
@@ -10,8 +19,17 @@ class Post(BaseModel):
     title: str
     content: str
     published: bool = True
-    rating:Optional[float] = None
-
+    
+while True:
+    try:
+        conn= psycopg2.connect(host='localhost', database='fastapi', user='postgres', password=password, cursor_factory=RealDictCursor)
+        cursor = conn.cursor()
+        print("Database connection was successful")
+        break
+    except Exception as error:
+        print("Connection to database failed")
+        print("Error:", error)
+        time.sleep(2)
 
 
 my_posts =[{"title": "title of post 1", "content": "content of post 1", "id":1},{"title": "title of post 2", "content": "content of post 2", "id":2}]
@@ -32,7 +50,9 @@ def root():
 
 @app.get("/posts")
 def get_posts():
-    return {"data": my_posts}
+    cursor.execute("""SELECT * FROM posts""")
+    posts = cursor.fetchall()
+    return {"data": posts}
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 def create_post(post: Post):
@@ -58,7 +78,12 @@ def delete_post(id: int):
 
 @app.put("/posts/{id}")
 def update_post(id: int, post:Post):
+    print(f"id: {id}")
+    print(f"post: {post}")
+    
     index = find_index(id)
+    print(f"index: {index}")
+
     if index == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} does not exist")
     post_dict = post.dict()
