@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response,status, HTTPException
+from fastapi import FastAPI, Response,status, HTTPException, Depends
 from fastapi import Body
 from pydantic import BaseModel
 from typing import Optional
@@ -7,7 +7,10 @@ import psycopg2
 import os
 from dotenv import load_dotenv
 from psycopg2.extras import RealDictCursor
-import time
+import time 
+from . import model
+from .database import engine, get_db
+from sqlalchemy.orm import Session
 
 # Load environment variables from .env file
 load_dotenv()
@@ -15,6 +18,8 @@ DB_HOST = os.getenv('DB_HOST')
 DB_NAME = os.getenv('DB_NAME')
 DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
+
+model.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -50,6 +55,13 @@ def find_index(id):
 @app.get("/")
 def root():
     return {"message": "Welcome to FastAPI!"}
+
+@app.get("/sqlalchemy")
+def test_post(db: Session = Depends(get_db)):
+    posts = db.query(model.Post)
+    print(posts)
+    return {"data": "success"}
+
 
 @app.get("/posts")
 def get_posts():
