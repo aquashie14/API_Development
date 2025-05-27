@@ -10,7 +10,7 @@ import time
 from . import model, schema,utilis
 from .database import engine, get_db
 from sqlalchemy.orm import Session
-from .routers import posts, users
+from .routers import auth, posts, users
 
 # Load environment variables from .env file
 load_dotenv()
@@ -53,6 +53,7 @@ def find_index(id):
 
 app.include_router(posts.router)
 app.include_router(users.router)
+app.include_router(auth.router)
 
 @app.get("/")
 def root():
